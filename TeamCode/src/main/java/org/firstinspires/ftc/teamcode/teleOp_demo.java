@@ -79,7 +79,9 @@ public class teleOp_demo extends OpMode{
                                                          // could also use HardwarePushbotMatrix class.
     double          clawOffset  = 0.0 ;                  // Servo mid position
     final double    CLAW_SPEED  = 0.02 ;// sets rate to move servo
+    boolean canResetTime = true;
     boolean changeMoveMemo;
+    boolean lastShoot = false;
     boolean moveScheme = false;
     boolean rampState = false;
     boolean rampBack = false;
@@ -87,6 +89,7 @@ public class teleOp_demo extends OpMode{
     double rampDefault = .5;
     double bumperDefault = .7;
     double ShootMotor = 0;
+    double startTime = 0;
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -150,7 +153,7 @@ public class teleOp_demo extends OpMode{
     @Override
 
     public void start() {
-
+        timer.reset();
     }
     /*
      * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
@@ -196,10 +199,10 @@ public class teleOp_demo extends OpMode{
 
 
             }else{
-                robot.leftFrontMotor.setPower(leftY);
-                robot.rightFrontMotor.setPower(leftX);
-                robot.leftBackMotor.setPower(leftX);
-                robot.rightBackMotor.setPower(leftY);
+                robot.leftFrontMotor.setPower(leftX);
+                robot.rightFrontMotor.setPower(leftY);
+                robot.leftBackMotor.setPower(leftY);
+                robot.rightBackMotor.setPower(leftX);
             }
 
         }else{
@@ -215,42 +218,56 @@ public class teleOp_demo extends OpMode{
         }
 
         if (shoot) {
-            ShootMotor = 1;
+            if(canResetTime){
+                startTime = timer.seconds();
+                canResetTime = false;
+            }
+            if(timer.seconds() - startTime > .5) {
+                ShootMotor = 1;
+            }
+            if(timer.seconds() - startTime > 2.5){
+                robot.Ramp.setPosition(rampDefault-.25);
+            } else {
+                robot.Ramp.setPosition(rampDefault+.25);
+            }
         } else {
+            canResetTime = true;
             if(ShootMotor > 0.01){
                 ShootMotor -= .25 * ShootMotor;
             } else {
                 ShootMotor = 0;
             }
+            if(ramp && !rampState){
+                rampUp++;
+            }
+            if(back && !rampBack){
+                rampUp--;
+            }
+            if(rampUp > 2){
+                rampUp = 0;
+            } else if(rampUp < 0){
+                rampUp = 2;
+            }
+            switch (rampUp){
+                default:
+                    robot.Ramp.setPosition(rampDefault);
+                    break;
+                case 0:
+                    robot.Ramp.setPosition(rampDefault-.25);
+                    break;
+                case 1:
+                    robot.Ramp.setPosition(rampDefault+.25);
+                    break;
+                case 2:
+                    robot.Ramp.setPosition(rampDefault+.1);
+                    break;
+            }
         }
         robot.rightShootMotor.setPower(ShootMotor);
         robot.leftShootMotor.setPower(-ShootMotor);
 
-        if(ramp && !rampState){
-            rampUp++;
-        }
-        if(back && !rampBack){
-            rampUp--;
-        }
-        if(rampUp > 2){
-            rampUp = 0;
-        } else if(rampUp < 0){
-            rampUp = 2;
-        }
-        switch (rampUp){
-            default:
-                robot.Ramp.setPosition(rampDefault);
-                break;
-            case 0:
-                robot.Ramp.setPosition(rampDefault-.25);
-                break;
-            case 1:
-                robot.Ramp.setPosition(rampDefault+.25);
-                break;
-            case 2:
-                robot.Ramp.setPosition(rampDefault+.1);
-                break;
-        }
+
+        lastShoot = shoot;
         changeMoveMemo = changeMove;
         rampState = ramp;
         rampBack = back;

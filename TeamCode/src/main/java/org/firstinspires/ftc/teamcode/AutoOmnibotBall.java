@@ -32,15 +32,10 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
-import android.graphics.Color;
-
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.adafruit.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
-import com.qualcomm.robotcore.hardware.DigitalChannelController;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -66,22 +61,20 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Omnibot Autonomous Red Test", group="Omnibot")  // @Autonomous(...) is the other common choice
+@Autonomous(name="Omnibot Autonomous Ball", group="Omnibot")  // @Autonomous(...) is the other common choice
 //@Disabled
-public class AutoOmnibotRedTest extends OpMode
+public class AutoOmnibotBall extends OpMode
 {
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
     // The IMU sensor object
-    private int desiredAngle = 45;
-    private double speed = .4;
+    private int desiredAngle = 0;
+    private double speed = .6;
     BNO055IMU imu;
     // State used for updating telemetry
     Orientation angles;
     Acceleration gravity;
     HardwareOmnibot robot = new HardwareOmnibot();
-    OpticalDistanceSensor odsSensor;
-    private double distanceThres = 1;
     double bumperDefault = .5;
     // private DcMotor leftMotor = null;
     // private DcMotor rightMotor = null;
@@ -99,7 +92,6 @@ public class AutoOmnibotRedTest extends OpMode
         // Set up the parameters with which we will use our IMU. Note that integration
         // algorithm here just reports accelerations to the logcat log; it doesn't actually
         // provide positional information.
-        odsSensor = hardwareMap.opticalDistanceSensor.get("sensor_ods");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
         parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
@@ -153,20 +145,16 @@ public class AutoOmnibotRedTest extends OpMode
      */
     @Override
     public void loop() {
-        boolean turnninety = false;
-        double lightValue = odsSensor.getLightDetected();
         angles   = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         double gyroDegrees = AngleUnit.DEGREES.normalize(AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle));
-        turnninety = (lightValue < distanceThres - .04);
-        if(turnninety && gyroDegrees > (desiredAngle - 15) && gyroDegrees < (desiredAngle + 15)){
-            desiredAngle+=90;
-            double startTime = timer.milliseconds();
-            while((timer.milliseconds() - startTime) < 100) {}//wait
+        if(timer.seconds() > 6){
+            robot.rightBackMotor.setPower(0);
+            robot.leftFrontMotor.setPower(0);
+            robot.rightFrontMotor.setPower(0);
+            robot.leftBackMotor.setPower(0);
         } else {
             if (gyroDegrees > (desiredAngle - 15) && gyroDegrees < (desiredAngle + 15)) {//angle is within tolerance
-                if (distanceThres == 1) {
-                    distanceThres = lightValue;
-                }
+
                 telemetry.addData("Status", "within 45");
                 robot.rightBackMotor.setPower(0);
                 robot.leftFrontMotor.setPower(0);
@@ -179,6 +167,7 @@ public class AutoOmnibotRedTest extends OpMode
                     robot.rightFrontMotor.setPower(speed);
                 }
             } else {
+                timer.reset();
                 if (gyroDegrees < desiredAngle) {
                     telemetry.addData("Status", "below 45");
                     robot.leftFrontMotor.setPower(speed);
@@ -194,7 +183,6 @@ public class AutoOmnibotRedTest extends OpMode
                 }
             }
         }
-        turnninety = false;
         telemetry.addData("Degrees: ",gyroDegrees);
     }
 

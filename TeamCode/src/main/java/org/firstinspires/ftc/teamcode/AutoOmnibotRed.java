@@ -71,7 +71,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 public class AutoOmnibotRed extends OpMode
 {
     /* Declare OpMode members. */
-    private ElapsedTime runtime = new ElapsedTime();
     // The IMU sensor object
     private double speed = .4;
     private double distanceThres = 1;
@@ -161,7 +160,7 @@ public class AutoOmnibotRed extends OpMode
      */
     @Override
     public void start() {
-        runtime.reset();
+        timer.reset();
     }
 
     /*
