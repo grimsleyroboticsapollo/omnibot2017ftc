@@ -100,7 +100,7 @@ public class SensorAdafruitRGB extends LinearOpMode {
     boolean bCurrState = false;
 
     // bLedOn represents the state of the LED.
-    boolean bLedOn = true;
+    boolean bLedOn = false;
 
     // get a reference to our DeviceInterfaceModule object.
     cdim = hardwareMap.deviceInterfaceModule.get("dim");
@@ -147,6 +147,8 @@ public class SensorAdafruitRGB extends LinearOpMode {
       telemetry.addData("Green", sensorRGB.green());
       telemetry.addData("Blue ", sensorRGB.blue());
       telemetry.addData("Hue", hsvValues[0]);
+      telemetry.addData("Saturation", hsvValues[1]);
+      telemetry.addData("Value", hsvValues[2]);
 
       // change the background color to match the color detected by the RGB sensor.
       // pass a reference to the hue, saturation, and value array as an argument

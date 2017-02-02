@@ -206,10 +206,10 @@ public class teleOp_demo extends OpMode{
             }
 
         }else{
-            robot.leftFrontMotor.setPower(-leftY);
-            robot.rightFrontMotor.setPower(-rightY);
-            robot.leftBackMotor.setPower(-leftY);
-            robot.rightBackMotor.setPower(-rightY);
+            robot.leftFrontMotor.setPower(rightY);
+            robot.rightFrontMotor.setPower(leftY);
+            robot.leftBackMotor.setPower(rightY);
+            robot.rightBackMotor.setPower(leftY);
         }
         if (feed){
             robot.FeedMotor.setPower(.9);
