@@ -198,17 +198,32 @@ public class AutoOmnibotRed extends OpMode
                 if (gyroDegrees > (desiredAngle - 15) && gyroDegrees < (desiredAngle + 15)) {//angle is within tolerance
                     telemetry.addData("Status", "within desired");
                     degoff = 1 - ((double) ((double) Math.abs(gyroDegrees - desiredAngle)) / 15);
-                    if (gyroDegrees < desiredAngle) {
-                        robot.leftBackMotor.setPower(speed);
-                        robot.leftFrontMotor.setPower(speed);
-                        robot.rightFrontMotor.setPower(speed * degoff);
-                        robot.rightBackMotor.setPower(speed * degoff);
+                    if(canRepeat){
+                        if (gyroDegrees < desiredAngle) {
+                            robot.leftBackMotor.setPower(speed);
+                            robot.leftFrontMotor.setPower(speed);
+                            robot.rightFrontMotor.setPower(speed * degoff);
+                            robot.rightBackMotor.setPower(speed * degoff);
+                        } else {
+                            robot.leftBackMotor.setPower(speed * degoff);
+                            robot.leftFrontMotor.setPower(speed * degoff);
+                            robot.rightFrontMotor.setPower(speed);
+                            robot.rightBackMotor.setPower(speed);
+                        }
                     } else {
-                        robot.leftBackMotor.setPower(speed * degoff);
-                        robot.leftFrontMotor.setPower(speed * degoff);
-                        robot.rightFrontMotor.setPower(speed);
-                        robot.rightBackMotor.setPower(speed);
+                        if (gyroDegrees < desiredAngle) {
+                            robot.leftBackMotor.setPower(-speed * degoff);
+                            robot.leftFrontMotor.setPower(speed);
+                            robot.rightFrontMotor.setPower(-speed);
+                            robot.rightBackMotor.setPower(speed * degoff);
+                        } else {
+                            robot.leftBackMotor.setPower(-speed);
+                            robot.leftFrontMotor.setPower(speed * degoff);
+                            robot.rightFrontMotor.setPower(-speed * degoff);
+                            robot.rightBackMotor.setPower(speed);
+                        }
                     }
+
                 } else {
                     if (gyroDegrees < desiredAngle) {
                         telemetry.addData("Status", "below desired");
@@ -224,21 +239,21 @@ public class AutoOmnibotRed extends OpMode
                         robot.rightBackMotor.setPower(speed);
                     }
                 }
-                if(canRepeat && timer.milliseconds() > 1100){
+                if(canRepeat && timer.milliseconds() > 1200){
                     robot.leftFrontMotor.setPower(0);
                     robot.rightBackMotor.setPower(0);
                     robot.leftBackMotor.setPower(0);
                     robot.rightFrontMotor.setPower(0);
                     shootTimer = timer.milliseconds();
                     programIterate = 1;
-                    desiredAngle = 45;
+                    desiredAngle = 135;
                 }
-                if(!canRepeat && dist < 15){
+                if(!canRepeat && dist < 40){
                     robot.leftFrontMotor.setPower(0);
                     robot.rightBackMotor.setPower(0);
                     robot.leftBackMotor.setPower(0);
                     robot.rightFrontMotor.setPower(0);
-                    programIterate = 2;
+                    programIterate = 5;
                     canRepeat = true;
                 }
                 break;
@@ -272,36 +287,46 @@ public class AutoOmnibotRed extends OpMode
                     exactDifference = 1;
                 }
                 if(dist < 15){
-                    robot.rightFrontMotor.setPower(-exactDifference);
-                    robot.leftBackMotor.setPower(-exactDifference);
+                    robot.rightFrontMotor.setPower(-exactDifference * speed);
+                    robot.leftBackMotor.setPower(-exactDifference * speed);
                 } else if(dist > 15) {
-                    robot.rightFrontMotor.setPower(exactDifference);
-                    robot.leftBackMotor.setPower(exactDifference);
+                    robot.rightFrontMotor.setPower(exactDifference * speed);
+                    robot.leftBackMotor.setPower(exactDifference * speed);
                 } else {
                     robot.rightFrontMotor.setPower(0);
                     robot.leftBackMotor.setPower(0);
                 }
-
-                if(gyroDegrees < desiredAngle){
-                    robot.leftFrontMotor.setPower(-speed);
-                    robot.rightBackMotor.setPower(-speed*degoff);
+                if((timer.milliseconds() - strafeTimer) > 1250){
+                    if(gyroDegrees < desiredAngle){
+                        robot.leftFrontMotor.setPower(-speed * .8);
+                        robot.rightBackMotor.setPower(-speed*degoff * .8);
+                    } else {
+                        robot.leftFrontMotor.setPower(-speed*degoff * .8);
+                        robot.rightBackMotor.setPower(-speed * .8);
+                    }
+                    if((hsvValues[0] < 10 || hsvValues[0] > 350) && hsvValues[2] > .7){
+                        programIterate = 3;
+                    }
                 } else {
-                    robot.leftFrontMotor.setPower(-speed*degoff);
-                    robot.rightBackMotor.setPower(-speed);
+                    if(gyroDegrees < desiredAngle){
+                        robot.leftFrontMotor.setPower(-speed);
+                        robot.rightBackMotor.setPower(-speed*degoff);
+                    } else {
+                        robot.leftFrontMotor.setPower(-speed*degoff);
+                        robot.rightBackMotor.setPower(-speed);
+                    }
                 }
-                if((hsvValues[0] < 360 && hsvValues[0] > 350) && hsvValues[2] > .7 && (timer.milliseconds() - strafeTimer) > 750){
-                    programIterate = 4;
-                }
+
                 break;
             case 3:
-                if(dist > (distanceThres - 5)){
+                if(dist < 12){
                     robot.rightFrontMotor.setPower(.25);
                     robot.rightBackMotor.setPower(0);
                     robot.leftBackMotor.setPower(.25);
                     robot.leftFrontMotor.setPower(0);
 
                     double startTime = timer.milliseconds();
-                    while((timer.milliseconds() - startTime) < 400) {
+                    while((timer.milliseconds() - startTime) < 800) {
 
                     }
                     robot.rightFrontMotor.setPower(-1);
@@ -317,7 +342,7 @@ public class AutoOmnibotRed extends OpMode
                         strafeTimer = timer.milliseconds();
                         canRepeat = false;
                     } else {
-                        programIterate = 5; //go to default
+                        programIterate = -1; //go to default
                     }
                     //make robot stop here
                 } else {
@@ -335,8 +360,8 @@ public class AutoOmnibotRed extends OpMode
                 break;
             case 4:
                 double setBack = timer.milliseconds();
-                robot.leftFrontMotor.setPower(speed);
-                robot.rightBackMotor.setPower(speed);
+                robot.leftFrontMotor.setPower(speed * 5);
+                robot.rightBackMotor.setPower(speed * 5);
                 robot.rightFrontMotor.setPower(0);
                 robot.leftBackMotor.setPower(0);
                 while(timer.milliseconds() - setBack < 500){
@@ -347,6 +372,21 @@ public class AutoOmnibotRed extends OpMode
                 robot.rightFrontMotor.setPower(0);
                 robot.leftBackMotor.setPower(0);
                 programIterate = 3;
+                break;
+            case 5:
+                degoff = 1 - ((double)((double) Math.abs(gyroDegrees - desiredAngle)) / 15);
+                robot.rightBackMotor.setPower(0);
+                robot.leftFrontMotor.setPower(0);
+                if(gyroDegrees < desiredAngle){
+                    robot.leftBackMotor.setPower(speed);
+                    robot.rightFrontMotor.setPower(speed*degoff);
+                } else {
+                    robot.leftBackMotor.setPower(speed*degoff);
+                    robot.rightFrontMotor.setPower(speed);
+                }
+                if(dist < 15){
+                    programIterate = 2;
+                }
                 break;
         }
         telemetry.addData("Degrees: ",gyroDegrees);

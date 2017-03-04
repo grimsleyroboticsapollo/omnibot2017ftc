@@ -70,8 +70,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 public class teleOp_demo extends OpMode{
 
     /* Declare OpMode members. */
-    HardwareOmnibot robot       = new HardwareOmnibot();
-    OpticalDistanceSensor odsSensor;  // Hardware Device Object
+    HardwareOmnibot robot       = new HardwareOmnibot();  // Hardware Device Object
     // State used for updating telemetry
     Orientation angles;
     Acceleration gravity;
@@ -111,7 +110,6 @@ public class teleOp_demo extends OpMode{
         // Set up the parameters with which we will use our IMU. Note that integration
         // algorithm here just reports accelerations to the logcat log; it doesn't actually
         // provide positional information.
-        odsSensor = hardwareMap.opticalDistanceSensor.get("sensor_ods");
 
         // get a reference to our DeviceInterfaceModule object.
         cdim = hardwareMap.deviceInterfaceModule.get("dim");
@@ -162,7 +160,6 @@ public class teleOp_demo extends OpMode{
     public void loop() {
         float hsvValues[] = {0F,0F,0F};
         Color.RGBToHSV((sensorRGB.red() * 255) / 800, (sensorRGB.green() * 255) / 800, (sensorRGB.blue() * 255) / 800, hsvValues);
-        double lightValue = 0.8028 * Math.pow(odsSensor.getLightDetected(), -0.999d); //in centimeters
         double leftY = -gamepad1.left_stick_y;
         double rightY = -gamepad1.right_stick_y;
         double leftX = -gamepad1.left_stick_x;
@@ -178,11 +175,6 @@ public class teleOp_demo extends OpMode{
         boolean Color1 = gamepad2.x;
         if(changeMove && !changeMoveMemo){
             moveScheme = !moveScheme;
-        }
-        if(hsvValues[0] < 240 && hsvValues[0] > 180 && hsvValues[1] > .7 && lightValue < 4) {
-            leftX = leftX * .25;
-            leftY = leftY * .25;
-            rightY = rightY * .25;
         }
         if(moveScheme){
             if(turnLeft){

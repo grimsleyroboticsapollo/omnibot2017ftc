@@ -76,7 +76,6 @@ public class AutoOmnibot extends OpMode
     /* Declare OpMode members. */
     // The IMU sensor object
     private double speed = .4;
-    private double distanceThres = 15;
     private double desiredAngle = 0;
     private double strafeTimer = 0;
     private double shootTimer = 0;
@@ -226,7 +225,7 @@ public class AutoOmnibot extends OpMode
                         robot.rightBackMotor.setPower(speed);
                     }
                 }
-                if(canRepeat && timer.milliseconds() > 1100){
+                if(canRepeat && timer.milliseconds() > 1200){
                     robot.leftFrontMotor.setPower(0);
                     robot.rightBackMotor.setPower(0);
                     robot.leftBackMotor.setPower(0);
@@ -235,12 +234,12 @@ public class AutoOmnibot extends OpMode
                     programIterate = 1;
                     desiredAngle = -45;
                 }
-                if(!canRepeat && dist < 15){
+                if(!canRepeat && dist < 40){
                     robot.leftFrontMotor.setPower(0);
                     robot.rightBackMotor.setPower(0);
                     robot.leftBackMotor.setPower(0);
                     robot.rightFrontMotor.setPower(0);
-                    programIterate = 2;
+                    programIterate = 5;
                     canRepeat = true;
                 }
                 break;
@@ -249,7 +248,7 @@ public class AutoOmnibot extends OpMode
                 if(timer.milliseconds() - shootTimer > 500) {
                     ShootMotor = 1;
                 }
-                if(timer.milliseconds() - shootTimer > 5000){
+                if(timer.milliseconds() - shootTimer > 3000){
                     robot.Ramp.setPosition(rampDefault);
                     if(canRepeat){
                         canRepeat = false;
@@ -274,36 +273,45 @@ public class AutoOmnibot extends OpMode
                     exactDifference = 1;
                 }
                 if(dist < 15){
-                    robot.rightFrontMotor.setPower(-exactDifference);
-                    robot.leftBackMotor.setPower(-exactDifference);
+                    robot.rightFrontMotor.setPower(-exactDifference * speed);
+                    robot.leftBackMotor.setPower(-exactDifference * speed);
                 } else if(dist > 15) {
-                    robot.rightFrontMotor.setPower(exactDifference);
-                    robot.leftBackMotor.setPower(exactDifference);
+                    robot.rightFrontMotor.setPower(exactDifference * speed);
+                    robot.leftBackMotor.setPower(exactDifference * speed);
                 } else {
                     robot.rightFrontMotor.setPower(0);
                     robot.leftBackMotor.setPower(0);
                 }
-
-                if(gyroDegrees < desiredAngle){
-                    robot.leftFrontMotor.setPower(speed);
-                    robot.rightBackMotor.setPower(speed*degoff);
+                if((timer.milliseconds() - strafeTimer) > 1250){
+                    if(gyroDegrees < desiredAngle){
+                        robot.leftFrontMotor.setPower(speed * .5);
+                        robot.rightBackMotor.setPower(speed*degoff * .5);
+                    } else {
+                        robot.leftFrontMotor.setPower(speed*degoff * .5);
+                        robot.rightBackMotor.setPower(speed * .5);
+                    }
+                    if((hsvValues[0] < 230 && hsvValues[0] > 210) && hsvValues[2] > .7){
+                        programIterate = 3;
+                    }
                 } else {
-                    robot.leftFrontMotor.setPower(speed*degoff);
-                    robot.rightBackMotor.setPower(speed);
-                }
-                if((hsvValues[0] < 225 && hsvValues[0] > 210) && hsvValues[2] > .7 && (timer.milliseconds() - strafeTimer) > 750){
-                    programIterate = 4;
+                    if(gyroDegrees < desiredAngle){
+                        robot.leftFrontMotor.setPower(speed);
+                        robot.rightBackMotor.setPower(speed*degoff);
+                    } else {
+                        robot.leftFrontMotor.setPower(speed*degoff);
+                        robot.rightBackMotor.setPower(speed);
+                    }
                 }
                 break;
             case 3:
-                if(dist > (distanceThres - 5)){
+                if(dist < 12){
                     robot.rightFrontMotor.setPower(.25);
                     robot.rightBackMotor.setPower(0);
                     robot.leftBackMotor.setPower(.25);
                     robot.leftFrontMotor.setPower(0);
 
                     double startTime = timer.milliseconds();
-                    while((timer.milliseconds() - startTime) < 400) {
+                    while((timer.milliseconds() - startTime) < 800) {
 
                     }
                     robot.rightFrontMotor.setPower(-speed);
@@ -319,7 +327,7 @@ public class AutoOmnibot extends OpMode
                         strafeTimer = timer.milliseconds();
                         canRepeat = false;
                     } else {
-                        programIterate = 5; //go to default
+                        programIterate = -1; //go to default
                     }
                     //make robot stop here
                 } else {
@@ -337,8 +345,8 @@ public class AutoOmnibot extends OpMode
                 break;
             case 4:
                 double setBack = timer.milliseconds();
-                robot.leftFrontMotor.setPower(-speed);
-                robot.rightBackMotor.setPower(-speed);
+                robot.leftFrontMotor.setPower(-speed * 5);
+                robot.rightBackMotor.setPower(-speed * 5);
                 robot.rightFrontMotor.setPower(0);
                 robot.leftBackMotor.setPower(0);
                 while(timer.milliseconds() - setBack < 500){
@@ -350,9 +358,27 @@ public class AutoOmnibot extends OpMode
                 robot.leftBackMotor.setPower(0);
                 programIterate = 3;
                 break;
+            case 5:
+                degoff = 1 - ((double)((double) Math.abs(gyroDegrees - desiredAngle)) / 15);
+                robot.rightBackMotor.setPower(0);
+                robot.leftFrontMotor.setPower(0);
+                if(gyroDegrees < desiredAngle){
+                    robot.leftBackMotor.setPower(speed);
+                    robot.rightFrontMotor.setPower(speed*degoff);
+                } else {
+                    robot.leftBackMotor.setPower(speed*degoff);
+                    robot.rightFrontMotor.setPower(speed);
+                }
+                if(dist < 15){
+                    programIterate = 2;
+                }
+                break;
         }
         telemetry.addData("Degrees: ",gyroDegrees);
         telemetry.addData("Iterate: ",programIterate);
+        telemetry.addData("timer.milliseconds() - strafeTimer: ", (timer.milliseconds() - strafeTimer));
+        telemetry.addData("hue: ", hsvValues[0]);
+        telemetry.addData("value: ", hsvValues[2]);
     }
 
     /*
